@@ -61,7 +61,7 @@ export default function LoginForm() {
         transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-md mt-[100px] mb-[100px]"
       >
-        <div className="glass-card p-8 rounded-2xl shadow-2xl border border-white/20">
+        <div className="card-info-glass p-8 rounded-2xl shadow-2xl border border-white/20">
           {/* Logo */}
           <div className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center bg-gradient-to-tr from-neon-blue to-neon-purple shadow-lg shadow-neon-blue/40">
             <span className="text-white text-2xl font-extrabold">N</span>

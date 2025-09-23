@@ -85,7 +85,7 @@ body {
 
 .tech-universe-bg {
   background:
-    linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    black;
 }
 
 /* Animation Classes */
@@ -528,4 +528,50 @@ body {
 .fancy:hover .bottom-key-2 {
   right: 0;
   width: 0;
+}
+
+.product {
+  display: grid;
+  grid-template-columns: 0.9fr 1fr;
+  min-width: 300px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0, 224, 255, 0.15);
+  overflow: hidden;
+}
+
+.product__photo img {
+  max-width: 100%;
+  filter: drop-shadow(1px 4px 10px rgba(0, 0, 0, 0.3));
+}
+
+.product__info h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.product__info .price {
+  margin: 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ff3f40;
+}
+
+.product__info ul {
+  font-size: 0.875rem;
+  list-style: disc;
+  margin-left: 1.25rem;
+  color: #e2e8f0;
+}
+
+.card-info-glass{
+  /* From https://css.glass */
+    background: rgba(223, 213, 213, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(223, 213, 213, 0.19);
 }

@@ -9,6 +9,7 @@ import SpaceScene from "../components/3d/SpaceScene";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import SpaceProjectCard from "../components/ui/SpaceProjectCard";
 import { useFeaturedProjects } from "../hooks/useProjects";
+import { TypeAnimation } from "react-type-animation";
 // // 3D Scene (Canvas nằm bên trong, ssr: false)
 // const SpaceScene = dynamic(() => import("../components/3d/SpaceScene"), {
 //   ssr: false,
@@ -117,34 +118,52 @@ export default function HomePage() {
             {/* Main Title */}
             <motion.h1
               className="text-6xl md:text-8xl font-bold font-display"
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 1, delay: 0.5 }}
             >
-              <span className="bg-gradient-to-r from-neon-blue via-neon-purple to-neon-green bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-neon-blue via-neon-purple to-neon-green bg-clip-text text-transparent drop-shadow-lg">
                 NextGenAI
               </span>
             </motion.h1>
 
-            {/* Subtitle */}
+            {/* Subtitle with typewriter */}
             <motion.h2
-              className="text-2xl md:text-4xl text-gray-300 font-light"
+              className="text-2xl md:text-4xl text-gray-200 font-light min-h-[48px]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 1 }}
             >
-              Build, Buy, Imagine with AI + Source
+              <TypeAnimation
+                sequence={[
+                  "Build with AI ✨",
+                  2000,
+                  "Buy Smart Source 🚀",
+                  2000,
+                  "Imagine the Future 🌌",
+                  2000,
+                ]}
+                speed={50}
+                repeat={Infinity}
+              />
             </motion.h2>
 
             {/* Description */}
             <motion.p
               className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 1.5 }}
             >
-              Hành tinh Code & AI - Nơi kết nối những ý tưởng sáng tạo với công
-              nghệ tiên tiến
+              Hành tinh Code & AI – Nơi kết nối{" "}
+              <span className="text-cyan-400 font-semibold">
+                ý tưởng sáng tạo
+              </span>{" "}
+              với{" "}
+              <span className="text-purple-400 font-semibold">
+                công nghệ tiên tiến
+              </span>
+              .
             </motion.p>
 
             {/* Action Buttons */}
@@ -237,7 +256,7 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.2 }}
                 viewport={{ once: true }}
-                className="tech-card text-center p-8 group"
+                className="card-info-glass text-center p-8 group"
               >
                 <div className="text-6xl mb-6 group-hover:animate-bounce">
                   {feature.icon}
@@ -268,7 +287,7 @@ export default function HomePage() {
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
-                className="text-center"
+                className="text-center card-info-glass"
                 initial={{ scale: 0 }}
                 whileInView={{ scale: 1 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -297,7 +316,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold font-display  mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold font-display mb-6 neon-text">
               🌟 Dự án nổi bật từ Code Galaxy
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
@@ -314,7 +333,7 @@ export default function HomePage() {
               Không thể tải dự án nổi bật
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-10">
               {(featuredData?.projects || [])
                 .slice(0, 6)
                 .map((project, index) => (
