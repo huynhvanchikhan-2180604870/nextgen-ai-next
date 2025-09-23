@@ -85,9 +85,6 @@ body {
 
 .tech-universe-bg {
   background:
-    radial-gradient(circle at 20% 80%, rgba(0, 245, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(191, 0, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(0, 255, 65, 0.05) 0%, transparent 50%),
     linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
 }
 
