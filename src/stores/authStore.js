@@ -118,9 +118,11 @@ export const useAuthStore = create(
             });
             console.log("📧 AuthStore: Email verification required");
 
-            // Redirect to verify OTP page
+            // Redirect to verify OTP page with email
             if (typeof window !== "undefined") {
-              window.location.href = "/auth/verify-otp";
+              window.location.href = `/auth/verify-otp?email=${encodeURIComponent(
+                userData.email
+              )}`;
             }
           }
 

@@ -17,6 +17,38 @@ function VerifyOTPForm() {
   // lấy email từ query string (?email=xxx)
   const email = searchParams.get("email") || "";
 
+  // Kiểm tra email có tồn tại không
+  if (!email) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 w-full max-w-md"
+        >
+          <div className="card-info-glass p-8 rounded-2xl shadow-2xl border border-white/20 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-red-500/20 shadow-lg">
+              <span className="text-red-400 text-2xl font-extrabold">⚠️</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-4">
+              Email không hợp lệ
+            </h1>
+            <p className="text-gray-400 mb-6">
+              Không tìm thấy email trong URL. Vui lòng đăng ký lại.
+            </p>
+            <Link
+              href="/auth/register"
+              className="px-6 py-3 bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-lg font-semibold hover:opacity-90 transition-all duration-300"
+            >
+              Đăng ký lại
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   const handleOtpChange = (index, value) => {
     if (value.length > 1) return;
     const newOtp = [...otp];
