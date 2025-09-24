@@ -9,7 +9,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || "",
+    name: user?.fullName || "",
     email: user?.email || "",
     bio: user?.bio || "",
     website: user?.website || "",
@@ -30,7 +30,7 @@ export default function Profile() {
 
   const handleCancel = () => {
     setFormData({
-      name: user?.name || "",
+      name: user?.fullName || "",
       email: user?.email || "",
       bio: user?.bio || "",
       website: user?.website || "",
