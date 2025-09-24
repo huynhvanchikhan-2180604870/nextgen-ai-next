@@ -81,6 +81,12 @@ export const useAuthStore = create(
 
       // Register
       register: async (userData) => {
+        // Prevent multiple simultaneous registrations
+        if (get().isLoading) {
+          console.log("⏳ Registration already in progress, skipping...");
+          return { success: false, error: "Registration already in progress" };
+        }
+
         set({ isLoading: true, error: null });
 
         try {
@@ -111,6 +117,11 @@ export const useAuthStore = create(
               error: null,
             });
             console.log("📧 AuthStore: Email verification required");
+
+            // Redirect to verify OTP page
+            if (typeof window !== "undefined") {
+              window.location.href = "/auth/verify-otp";
+            }
           }
 
           return {
