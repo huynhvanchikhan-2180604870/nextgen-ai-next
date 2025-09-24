@@ -71,11 +71,11 @@ export default function Profile() {
               <div className="text-center mb-6">
                 <div className="w-32 h-32 bg-gradient-to-r from-neon-blue to-neon-purple rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-4xl">
-                    {user?.name?.charAt(0) || "U"}
+                    {user?.fullName?.charAt(0) || "U"}
                   </span>
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  {user?.name || "User"}
+                  {user?.fullName || "User"}
                 </h2>
                 <p className="text-gray-400">{user?.email}</p>
               </div>
