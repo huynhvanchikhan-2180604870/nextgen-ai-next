@@ -81,6 +81,16 @@ const Navbar = () => {
               Khám phá
             </Link>
             <Link
+              href="/ideas"
+              className={`px-3 py-2 rounded-lg transition-all duration-300 ${
+                isActive("/ideas")
+                  ? "text-neon-blue bg-white/10 shadow-neon"
+                  : "text-gray-300 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              Ý tưởng
+            </Link>
+            <Link
               href="/planner"
               className={`px-3 py-2 rounded-lg transition-all duration-300 ${
                 isActive("/planner")
@@ -267,6 +277,17 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Khám phá
+              </Link>
+              <Link
+                href="/ideas"
+                className={`block px-3 py-2 rounded-lg text-base ${
+                  isActive("/ideas")
+                    ? "text-neon-blue bg-white/10"
+                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Ý tưởng
               </Link>
               <Link
                 href="/planner"

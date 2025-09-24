@@ -141,14 +141,14 @@ export const useProjectStore = create((set, get) => ({
     }
   },
 
-  // Get categories
-  getCategories: async () => {
+  // Get filter options
+  getFilterOptions: async () => {
     try {
-      const response = await projectService.getCategories();
-      const { categories } = response;
+      const response = await projectService.getFilterOptions();
+      const { data } = response;
 
-      set({ categories });
-      return { success: true, categories };
+      set({ filterOptions: data });
+      return { success: true, data };
     } catch (error) {
       set({ error: error.message });
       return { success: false, error: error.message };

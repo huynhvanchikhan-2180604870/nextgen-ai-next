@@ -1,6 +1,8 @@
 import { Inter } from "next/font/google";
+import ErrorBoundary from "../components/ErrorBoundary";
 import Footer from "../components/layout/Footer";
 import Navbar from "../components/layout/Navbar";
+import ConnectionStatus from "../components/ui/ConnectionStatus";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -81,11 +83,14 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${inter.className} tech-universe-bg min-h-screen`}>
         {/* ✅ Bọc Navbar + children + Footer trong Providers */}
-        <Providers>
-          <Navbar />
-          {children}
-          <Footer />
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <Navbar />
+            {children}
+            <Footer />
+            <ConnectionStatus />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

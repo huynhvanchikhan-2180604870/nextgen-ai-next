@@ -97,17 +97,17 @@ export const projectService = {
     }
   },
 
-  // Get project categories
-  async getProjectCategories() {
+  // Get filter options
+  async getFilterOptions() {
     try {
-      console.log("📂 Fetching project categories");
-      const response = await api.get(API_ENDPOINTS.PROJECTS.CATEGORIES);
+      console.log("🔍 Fetching filter options");
+      const response = await api.get(API_ENDPOINTS.PROJECTS.FILTER_OPTIONS);
 
-      console.log("✅ Categories fetched successfully:", response);
+      console.log("✅ Filter options fetched successfully:", response);
       return response;
     } catch (error) {
-      console.error("❌ Error fetching categories:", error);
-      throw new Error(error.message || "Không thể tải danh mục dự án");
+      console.error("❌ Error fetching filter options:", error);
+      throw new Error(error.message || "Không thể tải tùy chọn lọc");
     }
   },
 

@@ -2,11 +2,12 @@
 
 import { Canvas } from "@react-three/fiber";
 import { motion } from "framer-motion";
-import React, { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import PlanetMarketplace from "../../components/3d/PlanetMarketplace.jsx";
+import ErrorMessage from "../../components/ui/ErrorMessage.jsx";
 import LoadingSpinner from "../../components/ui/LoadingSpinner.jsx";
+import { useCategories } from "../../hooks/useCategories.js";
 import { useProjects } from "../../hooks/useProjects.js";
 
 const Explore = () => {
@@ -23,6 +24,13 @@ const Explore = () => {
   }, []);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Load categories from API
+  const {
+    data: categoriesData,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useCategories();
+
   const {
     data: projectsData,
     isLoading,
@@ -32,20 +40,89 @@ const Explore = () => {
     search: searchQuery,
   });
 
-  // Mock data fallback
-  // No more mock data - use real API data only
+  // Process categories data
+  const categories = useMemo(() => {
+    if (categoriesData?.success && categoriesData.data) {
+      // Add "All" category at the beginning, filter out any existing "All" from API
+      const apiCategories = categoriesData.data.filter(
+        (cat) => cat.name !== "All"
+      );
+      return [
+        {
+          name: "All",
+          icon: "🌟",
+          color: "from-neon-blue to-neon-purple",
+          _id: "all",
+        },
+        ...apiCategories.map((cat) => ({
+          name: cat.name,
+          icon: cat.icon || "📁",
+          color: `from-${cat.color?.replace("#", "") || "blue"}-400 to-${
+            cat.color?.replace("#", "") || "blue"
+          }-600`,
+          _id: cat._id,
+        })),
+      ];
+    }
 
-  const categories = [
-    { name: "All", icon: "🌟", color: "from-neon-blue to-neon-purple" },
-    { name: "React", icon: "⚛️", color: "from-blue-400 to-blue-600" },
-    { name: "Vue", icon: "💚", color: "from-green-400 to-green-600" },
-    { name: "Angular", icon: "🅰️", color: "from-red-400 to-red-600" },
-    { name: "Node.js", icon: "🟢", color: "from-green-500 to-green-700" },
-    { name: "Python", icon: "🐍", color: "from-yellow-400 to-yellow-600" },
-    { name: "AI", icon: "🤖", color: "from-purple-400 to-purple-600" },
-    { name: "Mobile", icon: "📱", color: "from-pink-400 to-pink-600" },
-    { name: "Web", icon: "🌐", color: "from-cyan-400 to-cyan-600" },
-  ];
+    // Fallback to default categories
+    return [
+      {
+        name: "All",
+        icon: "🌟",
+        color: "from-neon-blue to-neon-purple",
+        _id: "all",
+      },
+      {
+        name: "React",
+        icon: "⚛️",
+        color: "from-blue-400 to-blue-600",
+        _id: "react",
+      },
+      {
+        name: "Vue",
+        icon: "💚",
+        color: "from-green-400 to-green-600",
+        _id: "vue",
+      },
+      {
+        name: "Angular",
+        icon: "🅰️",
+        color: "from-red-400 to-red-600",
+        _id: "angular",
+      },
+      {
+        name: "Node.js",
+        icon: "🟢",
+        color: "from-green-500 to-green-700",
+        _id: "nodejs",
+      },
+      {
+        name: "Python",
+        icon: "🐍",
+        color: "from-yellow-400 to-yellow-600",
+        _id: "python",
+      },
+      {
+        name: "AI",
+        icon: "🤖",
+        color: "from-purple-400 to-purple-600",
+        _id: "ai",
+      },
+      {
+        name: "Mobile",
+        icon: "📱",
+        color: "from-pink-400 to-pink-600",
+        _id: "mobile",
+      },
+      {
+        name: "Web",
+        icon: "🌐",
+        color: "from-cyan-400 to-cyan-600",
+        _id: "web",
+      },
+    ];
+  }, [categoriesData]);
 
   // Sử dụng đúng path từ API response với memoization
   const projects = useMemo(() => {
@@ -125,16 +202,23 @@ const Explore = () => {
 
       {/* 3D Planet Marketplace */}
       <div className="h-[70vh] relative">
-        {isLoading ? (
+        {isLoading || categoriesLoading ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner size="lg" />
           </div>
-        ) : error ? (
+        ) : error || categoriesError ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center text-red-400">
-              <div className="text-6xl mb-4">🚫</div>
-              <p>Không thể tải vũ trụ code</p>
-            </div>
+            <ErrorMessage
+              title="Không thể tải vũ trụ code"
+              message={
+                error?.message ||
+                categoriesError?.message ||
+                "Vui lòng kiểm tra kết nối internet và thử lại"
+              }
+              icon="🚫"
+              onRetry={() => window.location.reload()}
+              retryText="Tải lại trang"
+            />
           </div>
         ) : (
           <Canvas camera={{ position: [0, 0, 20], fov: 60 }}>

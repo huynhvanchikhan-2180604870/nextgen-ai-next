@@ -9,6 +9,13 @@ export const API_CONFIG = {
   TIMEOUT: 30000, // 30 seconds for production
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000, // 1 second delay between retries
+  // WebSocket configuration for Render
+  WS_CONFIG: {
+    transports: ["polling", "websocket"],
+    timeout: 10000,
+    forceNew: true,
+    autoConnect: false,
+  },
 };
 
 // API Endpoints
@@ -34,9 +41,18 @@ export const API_ENDPOINTS = {
     CREATE: "/projects",
     UPDATE: "/projects/:id",
     DELETE: "/projects/:id",
-    CATEGORIES: "/projects/categories",
     SEARCH: "/projects/search",
     FEATURED: "/projects/featured",
+    FILTER_OPTIONS: "/projects/filter-options",
+  },
+
+  // Categories
+  CATEGORIES: {
+    LIST: "/categories",
+    DETAIL: "/categories/:id",
+    BY_SLUG: "/categories/slug/:slug",
+    STATS: "/categories/stats",
+    BREADCRUMB: "/categories/:id/breadcrumb",
   },
 
   // AI Planner

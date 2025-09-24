@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
+import AuthInitializer from "../components/auth/AuthInitializer.jsx";
 
 export default function Providers({ children }) {
   // ✅ Khởi tạo QueryClient chỉ 1 lần
@@ -25,6 +26,7 @@ export default function Providers({ children }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthInitializer />
       {children}
       {/* Devtools chỉ bật ở môi trường dev */}
       {process.env.NODE_ENV !== "production" && (
