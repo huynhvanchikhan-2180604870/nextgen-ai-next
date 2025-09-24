@@ -2,6 +2,7 @@
 
 import HologramAI from "@/components/3d/HologramAI";
 import SaveIdeaModal from "@/components/ai/SaveIdeaModal";
+import MarkdownRenderer from "@/components/ui/MarkdownRenderer";
 import { API_CONFIG } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import websocketService from "@/services/websocketService";
@@ -27,12 +28,69 @@ export default function AIPlanner() {
     scrollToBottom();
   }, [messages]);
 
+  // Load chat history when component mounts
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (isAuthenticated) {
+        // Try to get existing sessionId from localStorage
+        const savedSessionId = localStorage.getItem("aiChatSessionId");
+
+        if (savedSessionId) {
+          setSessionId(savedSessionId);
+          try {
+            const token = localStorage.getItem("accessToken");
+            const response = await fetch(
+              `${API_CONFIG.BASE_URL}/api/v1/ai-chat/sessions/${savedSessionId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.data.messages) {
+                const formattedMessages = data.data.messages.map(
+                  (msg, index) => ({
+                    id: Date.now() + index,
+                    type: msg.role,
+                    content: msg.content,
+                    timestamp: msg.timestamp,
+                  })
+                );
+                setMessages(formattedMessages);
+                console.log(
+                  "📚 Loaded chat history:",
+                  formattedMessages.length,
+                  "messages"
+                );
+              }
+            } else {
+              // Session not found, clear localStorage and create new session
+              localStorage.removeItem("aiChatSessionId");
+              setSessionId(null);
+            }
+          } catch (error) {
+            console.error("❌ Failed to load chat history:", error);
+            localStorage.removeItem("aiChatSessionId");
+            setSessionId(null);
+          }
+        }
+      }
+    };
+
+    loadChatHistory();
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (isAuthenticated) {
       const token = localStorage.getItem("accessToken");
       websocketService.connect(token);
 
       websocketService.on("ai_message", (data) => {
+        console.log("🤖 Frontend received AI message:", data);
         setMessages((prev) => [
           ...prev,
           {
@@ -65,6 +123,11 @@ export default function AIPlanner() {
       return () => {
         websocketService.disconnect();
       };
+    } else {
+      // Clear session when not authenticated
+      localStorage.removeItem("aiChatSessionId");
+      setSessionId(null);
+      setMessages([]);
     }
   }, [isAuthenticated]);
 
@@ -95,6 +158,10 @@ export default function AIPlanner() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             },
+            body: JSON.stringify({
+              // AI Chat session không cần body data phức tạp
+              // Chỉ cần tạo session đơn giản
+            }),
           }
         );
 
@@ -102,6 +169,8 @@ export default function AIPlanner() {
           const data = await response.json();
           const newSessionId = data.data.sessionId;
           setSessionId(newSessionId);
+          // Save sessionId to localStorage for persistence
+          localStorage.setItem("aiChatSessionId", newSessionId);
           websocketService.joinAISession(newSessionId);
           websocketService.sendAIMessage(newSessionId, currentMessage);
         } else {
@@ -165,9 +234,24 @@ export default function AIPlanner() {
             transition={{ duration: 0.8 }}
             className="text-center mb-4 md:mb-8"
           >
-            <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold font-display neon-text mb-4 md:mb-6">
-              🤖 AI Planner Hub
-            </h1>
+            <div className="flex items-center justify-center mb-4 md:mb-6">
+              <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold font-display neon-text">
+                🤖 AI Planner Hub
+              </h1>
+              {messages.length > 0 && (
+                <button
+                  onClick={() => {
+                    setMessages([]);
+                    localStorage.removeItem("aiChatSessionId");
+                    setSessionId(null);
+                  }}
+                  className="ml-4 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                  title="Xóa lịch sử chat"
+                >
+                  🗑️
+                </button>
+              )}
+            </div>
             <p className="text-sm md:text-xl text-gray-400 max-w-3xl mx-auto px-4">
               Phòng AI hologram - Nơi trí tuệ nhân tạo giúp bạn lập kế hoạch dự
               án
@@ -220,7 +304,7 @@ export default function AIPlanner() {
                 }`}
               >
                 <div
-                  className={`max-w-xs md:max-w-sm px-3 md:px-4 py-2 rounded-lg ${
+                  className={`max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl px-3 md:px-4 py-2 md:py-3 rounded-lg ${
                     message.type === "user"
                       ? "bg-gradient-to-r from-neon-blue to-neon-purple text-white"
                       : message.type === "ai"
@@ -228,8 +312,17 @@ export default function AIPlanner() {
                       : "bg-gradient-to-r from-neon-green to-neon-blue text-white"
                   }`}
                 >
-                  <p className="text-xs md:text-sm">{message.content}</p>
-                  <p className="text-xs opacity-70 mt-1">
+                  {message.type === "ai" ? (
+                    <MarkdownRenderer
+                      content={message.content}
+                      className="text-sm md:text-base"
+                    />
+                  ) : (
+                    <p className="text-sm md:text-base whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  )}
+                  <p className="text-xs opacity-70 mt-2">
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </p>
                 </div>
@@ -289,14 +382,15 @@ export default function AIPlanner() {
                 onChange={(e) => setCurrentMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Mô tả dự án của bạn..."
-                className="flex-1 px-3 md:px-4 py-2 glass rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:ring-opacity-50 text-sm md:text-base"
+                className="flex-1 px-3 md:px-4 py-2 md:py-3 glass rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:ring-opacity-50 text-sm md:text-base min-h-[40px] md:min-h-[44px]"
               />
               <button
                 onClick={handleSendMessage}
                 disabled={!currentMessage.trim() || isTyping}
-                className="px-3 md:px-4 py-2 bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-lg font-semibold hover:shadow-neon transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+                className="px-3 md:px-4 py-2 md:py-3 bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-lg font-semibold hover:shadow-neon transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base min-h-[40px] md:min-h-[44px] flex items-center justify-center"
               >
-                🚀
+                <span className="hidden sm:inline">🚀</span>
+                <span className="sm:hidden">📤</span>
               </button>
             </div>
           </div>

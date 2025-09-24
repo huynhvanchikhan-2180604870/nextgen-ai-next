@@ -101,6 +101,7 @@ class WebSocketService {
 
     this.socket.on("ai_message", (data) => {
       console.log("🤖 AI Message received:", data);
+      console.log("🤖 Emitting ai_message event to listeners");
       this.emit("ai_message", data);
     });
 
