@@ -88,16 +88,6 @@ const Navbar = () => {
               Khám phá
             </Link>
             <Link
-              href="/ideas"
-              className={`px-3 py-2 rounded-lg transition-all duration-300 ${
-                isActive("/ideas")
-                  ? "text-neon-blue bg-white/10 shadow-neon"
-                  : "text-gray-300 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              Ý tưởng
-            </Link>
-            <Link
               href="/planner"
               className={`px-3 py-2 rounded-lg transition-all duration-300 ${
                 isActive("/planner")
@@ -169,6 +159,13 @@ const Navbar = () => {
                         onClick={() => setIsProfileOpen(false)}
                       >
                         Kho dự án
+                      </Link>
+                      <Link
+                        href="/ideas"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        💡 Ý tưởng
                       </Link>
                       <Link
                         href="/favorites"

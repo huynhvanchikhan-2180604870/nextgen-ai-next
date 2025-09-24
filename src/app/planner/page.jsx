@@ -1,5 +1,7 @@
 "use client";
 
+import MessageActions from "@/components/ai/MessageActions";
+import SaveIdeaModal from "@/components/ai/SaveIdeaModal";
 import MarkdownRenderer from "@/components/ui/MarkdownRenderer";
 import { API_CONFIG } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +15,8 @@ export default function AIPlanner() {
   const [currentMessage, setCurrentMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -164,6 +168,11 @@ export default function AIPlanner() {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleSelectIdea = (message) => {
+    setSelectedMessage(message);
+    setShowSaveModal(true);
   };
 
   if (!isAuthenticated) {
@@ -362,6 +371,13 @@ export default function AIPlanner() {
                     </p>
                   </div>
                 </div>
+
+                {/* Message Actions for AI messages */}
+                <MessageActions
+                  message={message}
+                  onSelectIdea={handleSelectIdea}
+                  isSelected={selectedMessage?.id === message.id}
+                />
               </motion.div>
             ))}
 
@@ -407,6 +423,18 @@ export default function AIPlanner() {
                   className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
+
+              {/* Save Idea Button */}
+              {messages.length > 0 && (
+                <button
+                  onClick={() => setShowSaveModal(true)}
+                  className="w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors"
+                  title="Lưu ý tưởng"
+                >
+                  💾
+                </button>
+              )}
+
               <button
                 onClick={handleSendMessage}
                 disabled={!currentMessage.trim() || isTyping}
@@ -422,6 +450,18 @@ export default function AIPlanner() {
           </div>
         </div>
       </div>
+
+      {/* Save Idea Modal */}
+      <SaveIdeaModal
+        isOpen={showSaveModal}
+        onClose={() => {
+          setShowSaveModal(false);
+          setSelectedMessage(null);
+        }}
+        sessionId={sessionId}
+        messages={messages}
+        selectedMessage={selectedMessage}
+      />
     </div>
   );
 }

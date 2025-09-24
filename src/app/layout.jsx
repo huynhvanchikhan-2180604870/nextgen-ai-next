@@ -2,7 +2,6 @@ import { Inter } from "next/font/google";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Footer from "../components/layout/Footer";
 import Navbar from "../components/layout/Navbar";
-import ConnectionStatus from "../components/ui/ConnectionStatus";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -88,7 +87,6 @@ export default function RootLayout({ children }) {
             <Navbar />
             {children}
             <Footer />
-            <ConnectionStatus />
           </Providers>
         </ErrorBoundary>
       </body>

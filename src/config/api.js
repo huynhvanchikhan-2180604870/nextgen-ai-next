@@ -87,6 +87,20 @@ export const API_ENDPOINTS = {
     HEALTH: "/health",
   },
 
+  // Ideas
+  IDEAS: {
+    LIST: "/ideas",
+    DETAIL: "/ideas/:id",
+    CREATE: "/ideas",
+    UPDATE: "/ideas/:id",
+    DELETE: "/ideas/:id",
+    EXPORT: "/ideas/:id/export",
+    STATS: "/ideas/stats",
+    SEARCH: "/ideas/search",
+    DUPLICATE: "/ideas/:id/duplicate",
+    SHARE: "/ideas/:id/share",
+  },
+
   // Notifications
   NOTIFICATIONS: {
     LIST: "/notifications",

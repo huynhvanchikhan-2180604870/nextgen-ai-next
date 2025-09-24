@@ -1,371 +1,588 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { API_CONFIG } from "../../config/api.js";
+import { useEffect, useState } from "react";
+import { useCreateIdea } from "../../hooks/useIdeas.js";
 
-const SaveIdeaModal = ({ isOpen, onClose, sessionId, messages }) => {
+const SaveIdeaModal = ({
+  isOpen,
+  onClose,
+  sessionId,
+  messages,
+  selectedMessage = null,
+}) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    features: [],
-    techStack: [],
-    budget: {
-      estimated: 0,
-      currency: "USD",
-      breakdown: [],
-    },
-    timeline: {
-      estimated: 0,
-      phases: [],
-    },
-    complexity: {
-      level: "intermediate",
-      score: 5,
-      factors: [],
-    },
-    marketAnalysis: {
-      targetAudience: "",
-      competitors: [],
-      opportunities: [],
-      challenges: [],
-    },
-    resources: {
-      teamSize: 1,
-      roles: [],
-      tools: [],
-      externalServices: [],
-    },
+    category: "general",
     tags: [],
+    priority: "medium",
+    status: "draft",
   });
+  const [newTag, setNewTag] = useState("");
+  const [errors, setErrors] = useState({});
 
-  const [isLoading, setIsLoading] = useState(false);
+  const createIdeaMutation = useCreateIdea();
 
-  const handleSave = async () => {
+  // Auto-fill form data from AI messages
+  useEffect(() => {
+    if (isOpen && messages && messages.length > 0) {
+      // Use selected message if provided, otherwise use latest AI message
+      const targetMessage =
+        selectedMessage ||
+        messages.filter((msg) => msg.type === "ai").slice(-1)[0];
+      const userMessages = messages.filter((msg) => msg.type === "user");
+
+      if (targetMessage) {
+        // Extract title from user message that prompted this AI response
+        const userMessageIndex =
+          messages.findIndex((msg) => msg.id === targetMessage.id) - 1;
+        const relatedUserMessage =
+          userMessageIndex >= 0 ? messages[userMessageIndex] : userMessages[0];
+
+        let title = "";
+        if (relatedUserMessage?.content) {
+          // Extract from user input like "Tôi muốn tạo một ứng dụng web bán hàng"
+          const titleMatch = relatedUserMessage.content.match(
+            /(?:tạo|phát triển|build|develop)\s+(?:một|an?)\s+([^,.\n]+)/i
+          );
+          if (titleMatch) {
+            title = titleMatch[1].trim();
+          } else {
+            // Fallback: use first 50 characters
+            title = relatedUserMessage.content
+              .substring(0, 50)
+              .replace(/[.!?]$/, "");
+          }
+        }
+
+        // Extract description from selected AI response
+        let description = "";
+        if (targetMessage.content) {
+          // Take first paragraph or first 300 characters
+          const firstParagraph =
+            targetMessage.content.split("\n\n")[0] ||
+            targetMessage.content.split("\n")[0];
+          description = firstParagraph.substring(0, 300);
+        }
+
+        // Extract tags from selected AI content
+        const allContent = targetMessage.content || "";
+        const tags = [];
+
+        // Common tech keywords
+        const techKeywords = [
+          "react",
+          "vue",
+          "angular",
+          "nextjs",
+          "nodejs",
+          "express",
+          "mongodb",
+          "mysql",
+          "postgresql",
+          "typescript",
+          "javascript",
+          "python",
+          "java",
+          "php",
+          "laravel",
+          "django",
+          "flask",
+          "mobile",
+          "ios",
+          "android",
+          "flutter",
+          "react native",
+          "swift",
+          "kotlin",
+          "ai",
+          "machine learning",
+          "deep learning",
+          "tensorflow",
+          "pytorch",
+          "opencv",
+          "blockchain",
+          "smart contract",
+          "solidity",
+          "web3",
+          "defi",
+          "nft",
+          "ecommerce",
+          "shopify",
+          "woocommerce",
+          "payment",
+          "stripe",
+          "paypal",
+          "api",
+          "rest",
+          "graphql",
+          "microservices",
+          "docker",
+          "kubernetes",
+          "aws",
+          "azure",
+          "gcp",
+          "firebase",
+          "vercel",
+          "netlify",
+        ];
+
+        techKeywords.forEach((keyword) => {
+          if (allContent.toLowerCase().includes(keyword.toLowerCase())) {
+            tags.push(keyword);
+          }
+        });
+
+        // Extract category from content
+        let category = "general";
+        if (
+          allContent.toLowerCase().includes("web") ||
+          allContent.toLowerCase().includes("website")
+        ) {
+          category = "web-development";
+        } else if (
+          allContent.toLowerCase().includes("mobile") ||
+          allContent.toLowerCase().includes("app")
+        ) {
+          category = "mobile-development";
+        } else if (
+          allContent.toLowerCase().includes("ai") ||
+          allContent.toLowerCase().includes("machine learning")
+        ) {
+          category = "ai-ml";
+        } else if (
+          allContent.toLowerCase().includes("blockchain") ||
+          allContent.toLowerCase().includes("crypto")
+        ) {
+          category = "blockchain";
+        } else if (
+          allContent.toLowerCase().includes("data") ||
+          allContent.toLowerCase().includes("analytics")
+        ) {
+          category = "data-science";
+        } else if (
+          allContent.toLowerCase().includes("game") ||
+          allContent.toLowerCase().includes("gaming")
+        ) {
+          category = "gaming";
+        } else if (
+          allContent.toLowerCase().includes("ecommerce") ||
+          allContent.toLowerCase().includes("shop")
+        ) {
+          category = "ecommerce";
+        }
+
+        // Set priority based on keywords
+        let priority = "medium";
+        if (
+          allContent.toLowerCase().includes("urgent") ||
+          allContent.toLowerCase().includes("asap")
+        ) {
+          priority = "urgent";
+        } else if (
+          allContent.toLowerCase().includes("important") ||
+          allContent.toLowerCase().includes("priority")
+        ) {
+          priority = "high";
+        } else if (
+          allContent.toLowerCase().includes("low") ||
+          allContent.toLowerCase().includes("later")
+        ) {
+          priority = "low";
+        }
+
+        setFormData({
+          title: title || "Ý tưởng từ AI Planner",
+          description: description || "Ý tưởng được tạo bởi AI Planner",
+          category,
+          tags: [...new Set(tags)].slice(0, 10), // Remove duplicates and limit to 10
+          priority,
+          status: "draft",
+        });
+      }
+    }
+  }, [isOpen, messages, selectedMessage]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()],
+      }));
+      setNewTag("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
     if (!formData.title.trim()) {
-      alert("Vui lòng nhập tiêu đề dự án");
-      return;
+      newErrors.title = "Tiêu đề là bắt buộc";
     }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/ai-project-ideas`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify({
-          sessionId,
-          ...formData,
-        }),
-      });
+    if (!formData.description.trim()) {
+      newErrors.description = "Mô tả là bắt buộc";
+    }
 
-      if (response.ok) {
-        const data = await response.json();
-        alert("Ý tưởng đã được lưu thành công!");
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) return;
+
+    try {
+      const ideaData = {
+        ...formData,
+        sessionId,
+        aiMessages: messages,
+        source: "ai-planner",
+        metadata: {
+          messageCount: messages.length,
+          lastMessage: messages[messages.length - 1]?.content || "",
+          createdAt: new Date().toISOString(),
+        },
+      };
+
+      const result = await createIdeaMutation.mutateAsync(ideaData);
+
+      if (result.success) {
         onClose();
-      } else {
-        const errorData = await response.json();
-        alert(`Lỗi: ${errorData.message}`);
+        setFormData({
+          title: "",
+          description: "",
+          category: "general",
+          tags: [],
+          priority: "medium",
+          status: "draft",
+        });
       }
     } catch (error) {
       console.error("Error saving idea:", error);
-      alert("Có lỗi xảy ra khi lưu ý tưởng");
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const addFeature = () => {
-    setFormData(prev => ({
-      ...prev,
-      features: [...prev.features, { name: "", description: "", priority: "medium", estimatedHours: 0 }],
-    }));
-  };
-
-  const removeFeature = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updateFeature = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.map((feature, i) => 
-        i === index ? { ...feature, [field]: value } : feature
-      ),
-    }));
   };
 
   if (!isOpen) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-gray-900 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Lưu Ý Tưởng Dự Án</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-        <div className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Thông Tin Cơ Bản</h3>
-            
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
+        <div className="glass-card p-6 rounded-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Tiêu đề dự án *
+              <h2 className="text-2xl font-bold text-white">
+                💡 Lưu ý tưởng AI
+              </h2>
+              <p className="text-sm text-gray-400 mt-1">
+                ✨ Thông tin đã được tự động điền từ cuộc trò chuyện
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Form */}
+          <div className="space-y-6">
+            {/* Title */}
+            <div>
+              <label className="block text-sm text-gray-300 mb-2">
+                Tiêu đề ý tưởng *
               </label>
               <input
                 type="text"
+                name="title"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập tiêu đề dự án..."
+                onChange={handleChange}
+                className={`w-full px-4 py-3 rounded-lg bg-black/40 text-white border transition-all focus:outline-none focus:ring-2 focus:ring-neon-blue ${
+                  errors.title ? "border-red-500" : "border-white/20"
+                }`}
+                placeholder="Nhập tiêu đề cho ý tưởng..."
+                disabled={createIdeaMutation.isPending}
               />
+              {errors.title && (
+                <p className="text-red-400 text-sm mt-1">{errors.title}</p>
+              )}
             </div>
 
+            {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Mô tả dự án *
+              <label className="block text-sm text-gray-300 mb-2">
+                Mô tả ý tưởng *
               </label>
               <textarea
+                name="description"
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Mô tả chi tiết về dự án..."
+                className={`w-full px-4 py-3 rounded-lg bg-black/40 text-white border transition-all focus:outline-none focus:ring-2 focus:ring-neon-blue resize-none ${
+                  errors.description ? "border-red-500" : "border-white/20"
+                }`}
+                placeholder="Mô tả chi tiết về ý tưởng..."
+                disabled={createIdeaMutation.isPending}
               />
-            </div>
-          </div>
-
-          {/* Features */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Tính Năng</h3>
-              <button
-                onClick={addFeature}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Thêm tính năng
-              </button>
+              {errors.description && (
+                <p className="text-red-400 text-sm mt-1">
+                  {errors.description}
+                </p>
+              )}
             </div>
 
-            {formData.features.map((feature, index) => (
-              <div key={index} className="bg-gray-800 p-4 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-white font-medium">Tính năng {index + 1}</h4>
-                  <button
-                    onClick={() => removeFeature(index)}
-                    className="text-red-400 hover:text-red-300"
+            {/* Category and Priority */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">
+                  Danh mục
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg bg-black/40 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-neon-blue"
+                  disabled={createIdeaMutation.isPending}
+                >
+                  <option value="general">Tổng quát</option>
+                  <option value="web-development">Phát triển Web</option>
+                  <option value="mobile-development">Phát triển Mobile</option>
+                  <option value="ai-ml">AI & Machine Learning</option>
+                  <option value="data-science">Data Science</option>
+                  <option value="blockchain">Blockchain</option>
+                  <option value="iot">IoT</option>
+                  <option value="gaming">Gaming</option>
+                  <option value="ecommerce">E-commerce</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">
+                  Độ ưu tiên
+                </label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg bg-black/40 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-neon-blue"
+                  disabled={createIdeaMutation.isPending}
+                >
+                  <option value="low">Thấp</option>
+                  <option value="medium">Trung bình</option>
+                  <option value="high">Cao</option>
+                  <option value="urgent">Khẩn cấp</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <label className="block text-sm text-gray-300 mb-2">Tags</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-neon-blue/20 text-neon-blue rounded-full text-sm flex items-center gap-2"
                   >
-                    Xóa
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">Tên tính năng</label>
-                    <input
-                      type="text"
-                      value={feature.name}
-                      onChange={(e) => updateFeature(index, "name", e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="Tên tính năng..."
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">Độ ưu tiên</label>
-                    <select
-                      value={feature.priority}
-                      onChange={(e) => updateFeature(index, "priority", e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="text-neon-blue hover:text-red-400"
                     >
-                      <option value="high">Cao</option>
-                      <option value="medium">Trung bình</option>
-                      <option value="low">Thấp</option>
-                    </select>
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
+                  className="flex-1 px-4 py-3 rounded-lg bg-black/40 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-neon-blue"
+                  placeholder="Thêm tag..."
+                  disabled={createIdeaMutation.isPending}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddTag}
+                  className="px-4 py-3 bg-neon-blue text-white rounded-lg hover:bg-neon-blue/80 transition-colors"
+                  disabled={createIdeaMutation.isPending}
+                >
+                  Thêm
+                </button>
+              </div>
+            </div>
+
+            {/* AI Messages Preview */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm text-gray-300">
+                  {selectedMessage
+                    ? "Nội dung AI đã chọn"
+                    : `Nội dung AI đã tạo (${messages.length} tin nhắn)`}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Reset to auto-filled data
+                    const targetMessage =
+                      selectedMessage ||
+                      messages.filter((msg) => msg.type === "ai").slice(-1)[0];
+                    const userMessages = messages.filter(
+                      (msg) => msg.type === "user"
+                    );
+
+                    if (targetMessage) {
+                      const userMessageIndex =
+                        messages.findIndex(
+                          (msg) => msg.id === targetMessage.id
+                        ) - 1;
+                      const relatedUserMessage =
+                        userMessageIndex >= 0
+                          ? messages[userMessageIndex]
+                          : userMessages[0];
+
+                      let title = "";
+                      if (relatedUserMessage?.content) {
+                        const titleMatch = relatedUserMessage.content.match(
+                          /(?:tạo|phát triển|build|develop)\s+(?:một|an?)\s+([^,.\n]+)/i
+                        );
+                        if (titleMatch) {
+                          title = titleMatch[1].trim();
+                        } else {
+                          title = relatedUserMessage.content
+                            .substring(0, 50)
+                            .replace(/[.!?]$/, "");
+                        }
+                      }
+
+                      let description = "";
+                      if (targetMessage.content) {
+                        const firstParagraph =
+                          targetMessage.content.split("\n\n")[0] ||
+                          targetMessage.content.split("\n")[0];
+                        description = firstParagraph.substring(0, 300);
+                      }
+
+                      setFormData({
+                        title: title || "Ý tưởng từ AI Planner",
+                        description:
+                          description || "Ý tưởng được tạo bởi AI Planner",
+                        category: "general",
+                        tags: [],
+                        priority: "medium",
+                        status: "draft",
+                      });
+                    }
+                  }}
+                  className="text-xs text-neon-blue hover:text-neon-purple transition-colors"
+                >
+                  🔄 Tự động điền lại
+                </button>
+              </div>
+              <div className="max-h-32 overflow-y-auto bg-black/20 rounded-lg p-3 border border-white/10">
+                {selectedMessage ? (
+                  <div className="text-sm text-gray-300">
+                    <span className="text-neon-blue">🤖 AI:</span>{" "}
+                    {selectedMessage.content.substring(0, 200)}
+                    {selectedMessage.content.length > 200 && "..."}
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">Mô tả</label>
-                    <textarea
-                      value={feature.description}
-                      onChange={(e) => updateFeature(index, "description", e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="Mô tả tính năng..."
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">Giờ ước tính</label>
-                    <input
-                      type="number"
-                      value={feature.estimatedHours}
-                      onChange={(e) => updateFeature(index, "estimatedHours", parseInt(e.target.value) || 0)}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="0"
-                    />
-                  </div>
+                ) : (
+                  messages.slice(-3).map((message, index) => (
+                    <div key={index} className="text-sm text-gray-300 mb-1">
+                      <span className="text-neon-blue">
+                        {message.type === "user" ? "👤 Bạn" : "🤖 AI"}:
+                      </span>{" "}
+                      {message.content.substring(0, 100)}
+                      {message.content.length > 100 && "..."}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4 mt-8">
+            <button
+              onClick={onClose}
+              className="flex-1 px-6 py-3 glass text-white rounded-lg font-semibold hover:bg-white/10 transition-all"
+              disabled={createIdeaMutation.isPending}
+            >
+              Hủy
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={createIdeaMutation.isPending}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-lg font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+            >
+              {createIdeaMutation.isPending ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Đang lưu...</span>
                 </div>
-              </div>
-            ))}
+              ) : (
+                "💾 Lưu ý tưởng"
+              )}
+            </button>
           </div>
 
-          {/* Budget */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Ngân Sách</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-300 mb-1">Tổng ngân sách ước tính</label>
-                <input
-                  type="number"
-                  value={formData.budget.estimated}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    budget: { ...prev.budget, estimated: parseInt(e.target.value) || 0 }
-                  }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="0"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm text-gray-300 mb-1">Đơn vị tiền tệ</label>
-                <select
-                  value={formData.budget.currency}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    budget: { ...prev.budget, currency: e.target.value }
-                  }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="USD">USD</option>
-                  <option value="VND">VND</option>
-                  <option value="EUR">EUR</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Timeline */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Thời Gian</h3>
-            
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">Thời gian ước tính (tuần)</label>
-              <input
-                type="number"
-                value={formData.timeline.estimated}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  timeline: { ...prev.timeline, estimated: parseInt(e.target.value) || 0 }
-                }))}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          {/* Complexity */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Độ Phức Tạp</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-300 mb-1">Mức độ</label>
-                <select
-                  value={formData.complexity.level}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    complexity: { ...prev.complexity, level: e.target.value }
-                  }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="beginner">Người mới</option>
-                  <option value="intermediate">Trung bình</option>
-                  <option value="advanced">Nâng cao</option>
-                  <option value="expert">Chuyên gia</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm text-gray-300 mb-1">Điểm số (1-10)</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={formData.complexity.score}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    complexity: { ...prev.complexity, score: parseInt(e.target.value) || 5 }
-                  }))}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Tags</h3>
-            
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">Thẻ (cách nhau bằng dấu phẩy)</label>
-              <input
-                type="text"
-                value={formData.tags.join(", ")}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  tags: e.target.value.split(",").map(tag => tag.trim()).filter(tag => tag)
-                }))}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="web, mobile, ai, blockchain..."
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-4 mt-8">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Hủy
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {isLoading ? "Đang lưu..." : "Lưu ý tưởng"}
-          </button>
+          {/* Error Display */}
+          {createIdeaMutation.error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg"
+            >
+              <p className="text-red-400 text-sm text-center">
+                {createIdeaMutation.error.message}
+              </p>
+            </motion.div>
+          )}
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
 
