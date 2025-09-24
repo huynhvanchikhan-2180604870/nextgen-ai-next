@@ -260,28 +260,38 @@ export default function AIPlanner() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-120px)] md:h-[calc(100vh-200px)]">
-        {/* 3D Scene - Hidden on mobile, visible on desktop */}
-        <div className="hidden lg:flex flex-1 relative">
-          <Canvas camera={{ position: [0, 0, 10], fov: 75 }}>
-            <HologramAI
-              messages={messages}
-              currentAnalysis={currentAnalysis}
-              isTyping={isTyping}
-            />
-          </Canvas>
+      {/* Full Width Chat Interface - Messenger Style */}
+      <div className="flex flex-col h-[calc(100vh-200px)] max-w-6xl mx-auto">
+        {/* Chat Header */}
+        <div className="p-4 border-b border-white/10 bg-black/20 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-neon-blue to-neon-purple rounded-full flex items-center justify-center">
+                🤖
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">AI Planner</h3>
+                <p className="text-gray-400 text-sm">Trí tuệ nhân tạo hỗ trợ lập kế hoạch</p>
+              </div>
+            </div>
+            {messages.length > 0 && (
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  localStorage.removeItem("aiChatSessionId");
+                  setSessionId(null);
+                }}
+                className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                title="Xóa lịch sử chat"
+              >
+                🗑️
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Chat Interface */}
-        <div className="w-full lg:w-96 glass-card border-l-0 lg:border-l border-white/10 flex flex-col">
-          {/* Chat Header */}
-          <div className="p-4 border-b border-white/10">
-            <h3 className="text-white font-semibold">💬 AI Chat</h3>
-            <p className="text-gray-400 text-sm">Trò chuyện với AI Planner</p>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-black/10 to-black/20">
             {messages.length === 0 && (
               <div className="text-center text-gray-400 py-4 md:py-8">
                 <div className="text-2xl md:text-4xl mb-2 md:mb-4">🤖</div>
@@ -301,30 +311,44 @@ export default function AIPlanner() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${
                   message.type === "user" ? "justify-end" : "justify-start"
-                }`}
+                } mb-4`}
               >
-                <div
-                  className={`max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl px-3 md:px-4 py-2 md:py-3 rounded-lg ${
+                <div className={`flex items-start space-x-2 max-w-[80%] ${
+                  message.type === "user" ? "flex-row-reverse space-x-reverse" : ""
+                }`}>
+                  {/* Avatar */}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
+                    message.type === "user" 
+                      ? "bg-gradient-to-r from-neon-blue to-neon-purple" 
+                      : "bg-gradient-to-r from-gray-600 to-gray-700"
+                  }`}>
+                    {message.type === "user" ? "👤" : "🤖"}
+                  </div>
+                  
+                  {/* Message Bubble */}
+                  <div className={`px-4 py-3 rounded-2xl ${
                     message.type === "user"
-                      ? "bg-gradient-to-r from-neon-blue to-neon-purple text-white"
+                      ? "bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-br-md"
                       : message.type === "ai"
-                      ? "glass text-white"
-                      : "bg-gradient-to-r from-neon-green to-neon-blue text-white"
-                  }`}
-                >
-                  {message.type === "ai" ? (
-                    <MarkdownRenderer
-                      content={message.content}
-                      className="text-sm md:text-base"
-                    />
-                  ) : (
-                    <p className="text-sm md:text-base whitespace-pre-wrap">
-                      {message.content}
+                      ? "bg-gray-800/80 text-white rounded-bl-md border border-gray-700/50"
+                      : "bg-gradient-to-r from-neon-green to-neon-blue text-white rounded-br-md"
+                  }`}>
+                    {message.type === "ai" ? (
+                      <div className="max-w-none">
+                        <MarkdownRenderer 
+                          content={message.content} 
+                          className="text-sm leading-relaxed"
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    )}
+                    <p className={`text-xs opacity-70 mt-2 ${
+                      message.type === "user" ? "text-right" : "text-left"
+                    }`}>
+                      {new Date(message.timestamp).toLocaleTimeString()}
                     </p>
-                  )}
-                  <p className="text-xs opacity-70 mt-2">
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </p>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -333,19 +357,18 @@ export default function AIPlanner() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex justify-start"
+                className="flex justify-start mb-4"
               >
-                <div className="glass px-4 py-2 rounded-lg">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-neon-blue rounded-full animate-bounce"></div>
-                    <div
-                      className="w-2 h-2 bg-neon-blue rounded-full animate-bounce"
-                      style={{ animationDelay: "0.1s" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-neon-blue rounded-full animate-bounce"
-                      style={{ animationDelay: "0.2s" }}
-                    ></div>
+                <div className="flex items-start space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 flex items-center justify-center text-sm flex-shrink-0">
+                    🤖
+                  </div>
+                  <div className="bg-gray-800/80 text-white rounded-2xl rounded-bl-md border border-gray-700/50 px-4 py-3">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -374,23 +397,28 @@ export default function AIPlanner() {
           )}
 
           {/* Input */}
-          <div className="p-3 md:p-4 border-t border-white/10">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Mô tả dự án của bạn..."
-                className="flex-1 px-3 md:px-4 py-2 md:py-3 glass rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:ring-opacity-50 text-sm md:text-base min-h-[40px] md:min-h-[44px]"
-              />
+          <div className="p-4 border-t border-white/10 bg-black/20 backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Nhập tin nhắn..."
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:ring-opacity-50 focus:border-transparent text-sm"
+                />
+              </div>
               <button
                 onClick={handleSendMessage}
                 disabled={!currentMessage.trim() || isTyping}
-                className="px-3 md:px-4 py-2 md:py-3 bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-lg font-semibold hover:shadow-neon transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base min-h-[40px] md:min-h-[44px] flex items-center justify-center"
+                className="w-10 h-10 bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="hidden sm:inline">🚀</span>
-                <span className="sm:hidden">📤</span>
+                {isTyping ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <span>📤</span>
+                )}
               </button>
             </div>
           </div>
