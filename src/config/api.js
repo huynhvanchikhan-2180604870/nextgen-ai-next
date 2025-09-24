@@ -1,11 +1,7 @@
 // API Configuration for Next.js
 export const API_CONFIG = {
-  BASE_URL:
-    process.env.NEXT_PUBLIC_API_URL ||
-    "https://nextgen-ai-backend-teov.onrender.com/api/v1",
-  WS_URL:
-    process.env.NEXT_PUBLIC_WS_URL ||
-    "https://nextgen-ai-backend-teov.onrender.com",
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || "http://3.85.2.223/api/v1",
+  WS_URL: process.env.NEXT_PUBLIC_WS_URL || "http://3.85.2.223",
   TIMEOUT: 30000, // 30 seconds for production
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000, // 1 second delay between retries

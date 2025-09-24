@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { TypeAnimation } from "react-type-animation";
 import { useAuth, useLogout } from "../../hooks/useAuth.js";
 import LoadingSpinner from "../ui/LoadingSpinner.jsx";
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -50,12 +50,19 @@ const Navbar = () => {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center space-x-2 text-xl font-bold neon-text hover:animate-glow transition-all duration-300"
+            className="flex items-center space-x-2 text-xl font-bold transition-all duration-300"
           >
             <div className="w-8 h-8 bg-gradient-to-r from-neon-blue to-neon-purple rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">N</span>
             </div>
-            <span className="font-display">NextGenAI</span>
+            <span className="font-display inline-block min-w-[20ch] text-center">
+              <TypeAnimation
+                sequence={["NextGen AI ✨", 2000, "Buy Smart Source 🚀", 2000]}
+                speed={50}
+                repeat={Infinity}
+                wrapper="span"
+              />
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
