@@ -1,12 +1,10 @@
 "use client";
 
-import HologramAI from "@/components/3d/HologramAI";
 import SaveIdeaModal from "@/components/ai/SaveIdeaModal";
 import MarkdownRenderer from "@/components/ui/MarkdownRenderer";
 import { API_CONFIG } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import websocketService from "@/services/websocketService";
-import { Canvas } from "@react-three/fiber";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
@@ -28,11 +26,9 @@ export default function AIPlanner() {
     scrollToBottom();
   }, [messages]);
 
-  // Load chat history when component mounts
   useEffect(() => {
     const loadChatHistory = async () => {
       if (isAuthenticated) {
-        // Try to get existing sessionId from localStorage
         const savedSessionId = localStorage.getItem("aiChatSessionId");
 
         if (savedSessionId) {
@@ -61,14 +57,8 @@ export default function AIPlanner() {
                   })
                 );
                 setMessages(formattedMessages);
-                console.log(
-                  "📚 Loaded chat history:",
-                  formattedMessages.length,
-                  "messages"
-                );
               }
             } else {
-              // Session not found, clear localStorage and create new session
               localStorage.removeItem("aiChatSessionId");
               setSessionId(null);
             }
@@ -90,7 +80,6 @@ export default function AIPlanner() {
       websocketService.connect(token);
 
       websocketService.on("ai_message", (data) => {
-        console.log("🤖 Frontend received AI message:", data);
         setMessages((prev) => [
           ...prev,
           {
@@ -124,7 +113,6 @@ export default function AIPlanner() {
         websocketService.disconnect();
       };
     } else {
-      // Clear session when not authenticated
       localStorage.removeItem("aiChatSessionId");
       setSessionId(null);
       setMessages([]);
@@ -148,7 +136,6 @@ export default function AIPlanner() {
     if (sessionId) {
       websocketService.sendAIMessage(sessionId, currentMessage);
     } else {
-      // Create session on backend first
       try {
         const response = await fetch(
           `${API_CONFIG.BASE_URL}/ai-chat/sessions`,
@@ -158,10 +145,7 @@ export default function AIPlanner() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             },
-            body: JSON.stringify({
-              // AI Chat session không cần body data phức tạp
-              // Chỉ cần tạo session đơn giản
-            }),
+            body: JSON.stringify({}),
           }
         );
 
@@ -169,13 +153,10 @@ export default function AIPlanner() {
           const data = await response.json();
           const newSessionId = data.data.sessionId;
           setSessionId(newSessionId);
-          // Save sessionId to localStorage for persistence
           localStorage.setItem("aiChatSessionId", newSessionId);
           websocketService.joinAISession(newSessionId);
           websocketService.sendAIMessage(newSessionId, currentMessage);
         } else {
-          const errorData = await response.json();
-          console.error("Failed to create AI session:", errorData);
           setIsTyping(false);
         }
       } catch (error) {
@@ -225,7 +206,6 @@ export default function AIPlanner() {
 
   return (
     <div className="min-h-screen tech-universe-bg pt-16">
-      {/* Header */}
       <div className="relative z-10 px-4 py-4 md:py-8">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -260,9 +240,7 @@ export default function AIPlanner() {
         </div>
       </div>
 
-      {/* Full Width Chat Interface - Messenger Style */}
       <div className="flex flex-col h-[calc(100vh-200px)] max-w-6xl mx-auto">
-        {/* Chat Header */}
         <div className="p-4 border-b border-white/10 bg-black/20 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -271,161 +249,161 @@ export default function AIPlanner() {
               </div>
               <div>
                 <h3 className="text-white font-semibold">AI Planner</h3>
-                <p className="text-gray-400 text-sm">Trí tuệ nhân tạo hỗ trợ lập kế hoạch</p>
+                <p className="text-gray-400 text-sm">
+                  Trí tuệ nhân tạo hỗ trợ lập kế hoạch
+                </p>
               </div>
             </div>
-            {messages.length > 0 && (
-              <button
-                onClick={() => {
-                  setMessages([]);
-                  localStorage.removeItem("aiChatSessionId");
-                  setSessionId(null);
-                }}
-                className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                title="Xóa lịch sử chat"
-              >
-                🗑️
-              </button>
-            )}
           </div>
         </div>
 
-        {/* Messages Container */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-black/10 to-black/20">
-            {messages.length === 0 && (
-              <div className="text-center text-gray-400 py-4 md:py-8">
-                <div className="text-2xl md:text-4xl mb-2 md:mb-4">🤖</div>
-                <p className="text-sm md:text-base">
-                  Chào mừng đến với AI Planner!
-                </p>
-                <p className="text-xs md:text-sm mt-1 md:mt-2">
-                  Hãy mô tả dự án của bạn để bắt đầu.
-                </p>
-              </div>
-            )}
+          {messages.length === 0 && (
+            <div className="text-center text-gray-400 py-4 md:py-8">
+              <div className="text-2xl md:text-4xl mb-2 md:mb-4">🤖</div>
+              <p className="text-sm md:text-base">
+                Chào mừng đến với AI Planner!
+              </p>
+              <p className="text-xs md:text-sm mt-1 md:mt-2">
+                Hãy mô tả dự án của bạn để bắt đầu.
+              </p>
+            </div>
+          )}
 
-            {messages.map((message) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${
-                  message.type === "user" ? "justify-end" : "justify-start"
-                } mb-4`}
+          {messages.map((message) => (
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex ${
+                message.type === "user" ? "justify-end" : "justify-start"
+              } mb-4`}
+            >
+              <div
+                className={`flex items-start space-x-2 max-w-[80%] ${
+                  message.type === "user"
+                    ? "flex-row-reverse space-x-reverse"
+                    : ""
+                }`}
               >
-                <div className={`flex items-start space-x-2 max-w-[80%] ${
-                  message.type === "user" ? "flex-row-reverse space-x-reverse" : ""
-                }`}>
-                  {/* Avatar */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
-                    message.type === "user" 
-                      ? "bg-gradient-to-r from-neon-blue to-neon-purple" 
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
+                    message.type === "user"
+                      ? "bg-gradient-to-r from-neon-blue to-neon-purple"
                       : "bg-gradient-to-r from-gray-600 to-gray-700"
-                  }`}>
-                    {message.type === "user" ? "👤" : "🤖"}
-                  </div>
-                  
-                  {/* Message Bubble */}
-                  <div className={`px-4 py-3 rounded-2xl ${
+                  }`}
+                >
+                  {message.type === "user" ? "👤" : "🤖"}
+                </div>
+
+                <div
+                  className={`px-4 py-3 rounded-2xl ${
                     message.type === "user"
                       ? "bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-br-md"
                       : message.type === "ai"
                       ? "bg-gray-800/80 text-white rounded-bl-md border border-gray-700/50"
                       : "bg-gradient-to-r from-neon-green to-neon-blue text-white rounded-br-md"
-                  }`}>
-                    {message.type === "ai" ? (
-                      <div className="max-w-none">
-                        <MarkdownRenderer 
-                          content={message.content} 
-                          className="text-sm leading-relaxed"
-                        />
-                      </div>
-                    ) : (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                    )}
-                    <p className={`text-xs opacity-70 mt-2 ${
-                      message.type === "user" ? "text-right" : "text-left"
-                    }`}>
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-
-            {isTyping && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-start mb-4"
-              >
-                <div className="flex items-start space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 flex items-center justify-center text-sm flex-shrink-0">
-                    🤖
-                  </div>
-                  <div className="bg-gray-800/80 text-white rounded-2xl rounded-bl-md border border-gray-700/50 px-4 py-3">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                  }`}
+                >
+                  {message.type === "ai" ? (
+                    <div className="max-w-none">
+                      <MarkdownRenderer
+                        content={message.content}
+                        className="text-sm leading-relaxed"
+                      />
                     </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  )}
+                  <p
+                    className={`text-xs opacity-70 mt-2 ${
+                      message.type === "user" ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-start mb-4"
+            >
+              <div className="flex items-start space-x-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 flex items-center justify-center text-sm flex-shrink-0">
+                  🤖
+                </div>
+                <div className="bg-gray-800/80 text-white rounded-2xl rounded-bl-md border border-gray-700/50 px-4 py-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
                 </div>
-              </motion.div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Quick Prompts */}
-          {messages.length === 0 && (
-            <div className="p-3 md:p-4 border-t border-white/10">
-              <p className="text-gray-400 text-xs md:text-sm mb-2 md:mb-3">
-                💡 Gợi ý nhanh:
-              </p>
-              <div className="space-y-1 md:space-y-2">
-                {quickPrompts.map((prompt, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentMessage(prompt)}
-                    className="w-full text-left px-2 md:px-3 py-1 md:py-2 text-xs md:text-sm glass rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                  >
-                    {prompt}
-                  </button>
-                ))}
               </div>
-            </div>
+            </motion.div>
           )}
+          <div ref={messagesEndRef} />
+        </div>
 
-          {/* Input */}
-          <div className="p-4 border-t border-white/10 bg-black/20 backdrop-blur-sm">
-            <div className="flex items-center space-x-3">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="Nhập tin nhắn..."
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:ring-opacity-50 focus:border-transparent text-sm"
-                />
-              </div>
-              <button
-                onClick={handleSendMessage}
-                disabled={!currentMessage.trim() || isTyping}
-                className="w-10 h-10 bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isTyping ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <span>📤</span>
-                )}
-              </button>
+        {messages.length === 0 && (
+          <div className="p-3 md:p-4 border-t border-white/10">
+            <p className="text-gray-400 text-xs md:text-sm mb-2 md:mb-3">
+              💡 Gợi ý nhanh:
+            </p>
+            <div className="space-y-1 md:space-y-2">
+              {quickPrompts.map((prompt, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentMessage(prompt)}
+                  className="w-full text-left px-2 md:px-3 py-1 md:py-2 text-xs md:text-sm glass rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
+          </div>
+        )}
+
+        <div className="p-4 border-t border-white/10 bg-black/20 backdrop-blur-sm">
+          <div className="flex items-center space-x-3">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Nhập tin nhắn..."
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:ring-opacity-50 focus:border-transparent text-sm"
+              />
+            </div>
+            <button
+              onClick={handleSendMessage}
+              disabled={!currentMessage.trim() || isTyping}
+              className="w-10 h-10 bg-gradient-to-r from-neon-blue to-neon-purple text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isTyping ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span>📤</span>
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Analysis Panel */}
       {currentAnalysis && (
         <motion.div
           initial={{ opacity: 0, y: 100 }}
@@ -512,7 +490,6 @@ export default function AIPlanner() {
         </motion.div>
       )}
 
-      {/* Save Idea Modal */}
       <SaveIdeaModal
         isOpen={showSaveModal}
         onClose={() => setShowSaveModal(false)}
