@@ -5,6 +5,7 @@ import { useFavorites } from "@/hooks/useProjects";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
+import { PriceWithUnit } from "../../components/ui/PriceDisplay";
 
 export default function Favorites() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -106,7 +107,9 @@ export default function Favorites() {
           </div>
           <div className="tech-card text-center p-6">
             <div className="text-3xl font-bold neon-text mb-2">
-              {projects.reduce((sum, p) => sum + (p.price || 0), 0)}
+              <PriceWithUnit
+                price={projects.reduce((sum, p) => sum + (p.price || 0), 0)}
+              />
             </div>
             <div className="text-gray-400">Tổng giá trị</div>
           </div>
@@ -221,7 +224,7 @@ export default function Favorites() {
                       </span>
                     </div>
                     <div className="text-neon-green font-semibold">
-                      ${project.price || 29}
+                      <PriceWithUnit price={project.price || 0} />
                     </div>
                   </div>
 

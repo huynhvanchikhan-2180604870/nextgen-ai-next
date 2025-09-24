@@ -1,6 +1,7 @@
 "use client";
 
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import PriceDisplay from "@/components/ui/PriceDisplay";
 import SuggestedProductsGrid from "@/components/ui/SuggestedProductsGrid";
 import { useProject } from "@/hooks/useProjects";
 import { motion } from "framer-motion";
@@ -159,21 +160,12 @@ export default function ProjectDetailPage() {
 
             {/* Price + Buy */}
             <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-xl border rounded-3xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-4xl font-bold text-white">
-                  ${project.price}
-                </span>
-                {project.originalPrice && (
-                  <span className="text-xl text-gray-400 line-through">
-                    ${project.originalPrice}
-                  </span>
-                )}
-                {project.discountPercentage > 0 && (
-                  <span className="bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold">
-                    -{project.discountPercentage}%
-                  </span>
-                )}
-              </div>
+              <PriceDisplay
+                price={project.price}
+                originalPrice={project.originalPrice}
+                size="2xl"
+                className="mb-6"
+              />
 
               <motion.button
                 whileHover={{ scale: 1.02 }}

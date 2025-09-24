@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState } from "react";
 import PlanetMarketplace from "../../components/3d/PlanetMarketplace.jsx";
 import ErrorMessage from "../../components/ui/ErrorMessage.jsx";
 import LoadingSpinner from "../../components/ui/LoadingSpinner.jsx";
+import PriceDisplay from "../../components/ui/PriceDisplay";
 import { useCategories } from "../../hooks/useCategories.js";
 import { useProjects } from "../../hooks/useProjects.js";
 
@@ -304,9 +305,11 @@ const Explore = () => {
 
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-neon-green mb-2">
-                    ${selectedProject.price || 29}
-                  </div>
+                  <PriceDisplay
+                    price={selectedProject.price || 0}
+                    size="2xl"
+                    className="mb-2"
+                  />
                   <p className="text-gray-400 text-sm">Giá dự án</p>
                 </div>
 

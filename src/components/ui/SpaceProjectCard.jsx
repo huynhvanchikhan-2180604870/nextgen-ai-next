@@ -1,7 +1,8 @@
 "use client";
 import { motion } from "framer-motion";
-import { memo, useState } from "react";
 import Image from "next/image";
+import { memo, useState } from "react";
+import PriceDisplay from "./PriceDisplay";
 
 const SpaceProjectCard = ({ project }) => {
   const [isFav, setIsFav] = useState(false);
@@ -89,16 +90,11 @@ const SpaceProjectCard = ({ project }) => {
 
         {/* Price */}
         <div className="mb-4">
-          <span className="text-2xl font-bold text-red-400">
-            {project.price
-              ? `${(project.price * 24000).toLocaleString("vi-VN")} VND`
-              : "Liên hệ"}
-          </span>
-          {project.originalPrice && (
-            <span className="ml-2 text-gray-500 line-through">
-              {(project.originalPrice * 24000).toLocaleString("vi-VN")} VND
-            </span>
-          )}
+          <PriceDisplay
+            price={project.price}
+            originalPrice={project.originalPrice}
+            size="lg"
+          />
         </div>
 
         {/* Features */}

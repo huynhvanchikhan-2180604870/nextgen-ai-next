@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { formatVND, formatVNDWithUnit } from "../../utils/currency";
 
 export default function Wallet() {
   const [activeTab, setActiveTab] = useState("balance");
@@ -9,12 +10,12 @@ export default function Wallet() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("vnpay");
 
   // Mock data
-  const balance = 1250.5;
+  const balance = 30000000; // 30M VND
   const transactions = [
     {
       id: 1,
       type: "topup",
-      amount: 500,
+      amount: 12000000, // 12M VND
       method: "VNPay",
       status: "completed",
       date: "2024-01-15",
@@ -23,7 +24,7 @@ export default function Wallet() {
     {
       id: 2,
       type: "purchase",
-      amount: -29.99,
+      amount: -720000, // 720K VND
       method: "Wallet",
       status: "completed",
       date: "2024-01-14",
@@ -32,7 +33,7 @@ export default function Wallet() {
     {
       id: 3,
       type: "topup",
-      amount: 1000,
+      amount: 24000000, // 24M VND
       method: "MoMo",
       status: "completed",
       date: "2024-01-10",
@@ -102,7 +103,7 @@ export default function Wallet() {
               Số dư hiện tại
             </h2>
             <div className="text-6xl font-bold neon-text mb-4">
-              ${balance.toLocaleString()}
+              {formatVNDWithUnit(balance)}
             </div>
             <p className="text-gray-400">Có thể sử dụng ngay</p>
           </div>
@@ -149,19 +150,21 @@ export default function Wallet() {
               <div className="tech-card p-6 text-center">
                 <div className="text-3xl mb-4">💰</div>
                 <div className="text-2xl font-bold neon-text mb-2">
-                  ${balance}
+                  {formatVNDWithUnit(balance)}
                 </div>
                 <div className="text-gray-400">Số dư khả dụng</div>
               </div>
               <div className="tech-card p-6 text-center">
                 <div className="text-3xl mb-4">📊</div>
-                <div className="text-2xl font-bold neon-text mb-2">$2,450</div>
+                <div className="text-2xl font-bold neon-text mb-2">
+                  {formatVNDWithUnit(58800000)}
+                </div>
                 <div className="text-gray-400">Tổng nạp</div>
               </div>
               <div className="tech-card p-6 text-center">
                 <div className="text-3xl mb-4">🛒</div>
                 <div className="text-2xl font-bold neon-text mb-2">
-                  $1,199.50
+                  {formatVNDWithUnit(28800000)}
                 </div>
                 <div className="text-gray-400">Tổng chi</div>
               </div>
@@ -179,7 +182,7 @@ export default function Wallet() {
                 <div className="space-y-6">
                   {/* Amount */}
                   <div>
-                    <label className="tech-label">Số tiền (USD)</label>
+                    <label className="tech-label">Số tiền (VND)</label>
                     <input
                       type="number"
                       value={topUpAmount}
@@ -195,13 +198,15 @@ export default function Wallet() {
                   <div>
                     <label className="tech-label">Số tiền nhanh</label>
                     <div className="grid grid-cols-3 gap-2">
-                      {[10, 25, 50, 100, 200, 500].map((amount) => (
+                      {[
+                        100000, 500000, 1000000, 2000000, 5000000, 10000000,
+                      ].map((amount) => (
                         <button
                           key={amount}
                           onClick={() => setTopUpAmount(amount.toString())}
                           className="px-3 py-2 glass rounded-lg text-white hover:bg-white/10"
                         >
-                          ${amount}
+                          {formatVNDWithUnit(amount)}
                         </button>
                       ))}
                     </div>
@@ -234,7 +239,8 @@ export default function Wallet() {
                     disabled={!topUpAmount || topUpAmount <= 0}
                     className="w-full tech-button py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    💳 Nạp ${topUpAmount || "0"}
+                    💳 Nạp{" "}
+                    {topUpAmount ? formatVND(parseInt(topUpAmount)) : "0 ₫"}
                   </button>
                 </div>
               </div>
@@ -281,8 +287,8 @@ export default function Wallet() {
                             : "text-red-400"
                         }`}
                       >
-                        {transaction.amount > 0 ? "+" : ""}$
-                        {Math.abs(transaction.amount)}
+                        {transaction.amount > 0 ? "+" : ""}
+                        {formatVND(Math.abs(transaction.amount))}
                       </div>
                       <div
                         className={`text-sm ${
